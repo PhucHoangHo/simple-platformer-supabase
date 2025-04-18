@@ -49,35 +49,41 @@ let gameOverTime = null;
 let leaderboardElement = null; // Added variable for leaderboard
 let gameOverContent = null; // Added gameOverContent variable
 
-// Function to calculate and apply game over layout
-function updateGameOverLayout() {
-    if (!gameOverOverlay || !gameOverContent || !leaderboardElement || gameOverOverlay.style.display === 'none') {
-        // Don't run if overlay isn't visible or elements missing
-        return; 
+function showGameOver(message, timeMs) {
+    if (!gameOverOverlay || !gameOverMessage || !gameOverTime || !leaderboardElement || !gameOverContent) {
+        console.error("Required overlay elements or leaderboard have not been initialized! Cannot show overlay.");
+        return;
     }
     
-    // --- Dynamic Positioning Logic (Moved from showGameOver) --- 
-    // Make elements display block temporarily if needed to measure accurately
-    const wasLeaderboardHidden = leaderboardElement.style.display === 'none';
-    if (wasLeaderboardHidden) leaderboardElement.style.display = 'block';
+    gameOverMessage.textContent = message;
+    if (timeMs) {
+        gameOverTime.textContent = `Your time: ${(timeMs / 1000).toFixed(2)}s`;
+        gameOverTime.style.display = 'block';
+    } else {
+        gameOverTime.style.display = 'none'; // Hide time if not applicable
+    }
     
-    // Force reflow
+    gameOverOverlay.style.display = 'block'; // Set display to block instead of flex
+
+    // --- Dynamic Positioning v3 --- 
+    leaderboardElement.style.display = 'block'; 
     void gameOverContent.offsetWidth; 
     void leaderboardElement.offsetWidth;
-
+    
     const modalRect = gameOverContent.getBoundingClientRect();
     const leaderboardRect = leaderboardElement.getBoundingClientRect(); 
-    const horizontalMargin = 15; 
-    const verticalMargin = 30; 
-    const padding = 10; 
+    const horizontalMargin = 15; // Use distinct names for clarity
+    const verticalMargin = 30; // Increased vertical space
+    const padding = 10; // Space from screen edges
 
     let modalTop, modalLeft, leaderTop, leaderLeft;
     const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-    const totalWidthSideBySide = modalRect.width + horizontalMargin + leaderboardRect.width; 
+    const totalWidthSideBySide = modalRect.width + horizontalMargin + leaderboardRect.width; // Corrected var name
     const fitsHorizontally = totalWidthSideBySide < (window.innerWidth - 2 * padding);
 
+    // Decide layout: Prefer side-by-side in landscape if width allows
     if (isLandscape && fitsHorizontally) {
-        // Landscape & Fits Width
+        // Landscape & Fits Width: Place side-by-side, centered horizontally as a group
         modalLeft = (window.innerWidth - totalWidthSideBySide) / 2;
         leaderLeft = modalLeft + modalRect.width + horizontalMargin;
         const maxHeight = Math.max(modalRect.height, leaderboardRect.height);
@@ -85,91 +91,58 @@ function updateGameOverLayout() {
         leaderTop = modalTop; 
 
     } else {
-        // Portrait OR Landscape but too wide
+        // Portrait OR Landscape but too wide: Stack vertically, centered horizontally
+        
+        // Position Modal first
         modalLeft = (window.innerWidth - modalRect.width) / 2;
         modalTop = padding * 2; 
-        
-        leaderLeft = (window.innerWidth - leaderboardRect.width) / 2;
-        leaderTop = modalTop + modalRect.height + verticalMargin; 
+        // Clamp modal position
+        modalTop = Math.max(padding, modalTop);
+        modalLeft = Math.max(padding, modalLeft);
+        // Apply modal styles *first*
+        gameOverContent.style.position = 'fixed'; 
+        gameOverContent.style.zIndex = '1002'; 
+        gameOverContent.style.top = `${modalTop}px`;
+        gameOverContent.style.left = `${modalLeft}px`;
 
-        // Prevent leaderboard going off bottom...
+        // Force reflow after positioning modal
+        void gameOverContent.offsetHeight;
+        
+        // Now calculate leaderboard position based on modal's actual place
+        const updatedModalRect = gameOverContent.getBoundingClientRect(); // Re-measure!
+        leaderLeft = (window.innerWidth - leaderboardRect.width) / 2;
+        leaderTop = updatedModalRect.bottom + verticalMargin; // Position below measured bottom
+        
+        // Clamp leaderboard position
+        leaderLeft = Math.max(padding, leaderLeft);
+        leaderTop = Math.max(padding, leaderTop);
         if (leaderTop + leaderboardRect.height > window.innerHeight - padding) {
             leaderTop = window.innerHeight - leaderboardRect.height - padding;
-            if (modalTop > leaderTop - verticalMargin - modalRect.height) {
-                 modalTop = leaderTop - verticalMargin - modalRect.height;
-            }
         }
+        if (leaderLeft + leaderboardRect.width > window.innerWidth - padding) {
+            leaderLeft = window.innerWidth - leaderboardRect.width - padding;
+        }
+        
+        console.log(`[DEBUG Portrait] modalBottom: ${updatedModalRect.bottom}, verticalMargin: ${verticalMargin}, calculated leaderTop: ${updatedModalRect.bottom + verticalMargin}, final leaderTop: ${leaderTop}`); // DEBUG Log
     }
 
-    // Clamp positions...
-    modalTop = Math.max(padding, modalTop);
-    modalLeft = Math.max(padding, modalLeft);
-    leaderTop = Math.max(padding, leaderTop);
-    leaderLeft = Math.max(padding, leaderLeft);
-     if (modalLeft + modalRect.width > window.innerWidth - padding) {
-        modalLeft = window.innerWidth - modalRect.width - padding;
+    // Apply styles to position modal (if not already done in portrait block)
+    if (!(isLandscape && fitsHorizontally)) {
+        // Already applied in the portrait 'else' block
+    } else {
+        // Apply modal styles for landscape case
+        gameOverContent.style.position = 'fixed'; 
+        gameOverContent.style.zIndex = '1002'; 
+        gameOverContent.style.top = `${modalTop}px`;
+        gameOverContent.style.left = `${modalLeft}px`;
     }
-    if (leaderLeft + leaderboardRect.width > window.innerWidth - padding) {
-        leaderLeft = window.innerWidth - leaderboardRect.width - padding;
-    }
-     if (modalTop + modalRect.height > window.innerHeight - padding) {
-        modalTop = window.innerHeight - modalRect.height - padding;
-    }
-     if (leaderTop + leaderboardRect.height > window.innerHeight - padding) {
-        leaderTop = window.innerHeight - leaderboardRect.height - padding;
-    }
-
-    // Apply styles to position modal
-    gameOverContent.style.position = 'fixed'; 
-    gameOverContent.style.zIndex = '1002'; 
-    gameOverContent.style.top = `${modalTop}px`;
-    gameOverContent.style.left = `${modalLeft}px`;
-
+    
     // Apply styles to position leaderboard
     leaderboardElement.style.position = 'fixed'; 
     leaderboardElement.style.zIndex = '1001'; 
     leaderboardElement.style.top = `${leaderTop}px`;
     leaderboardElement.style.left = `${leaderLeft}px`;
     leaderboardElement.style.display = 'block'; 
-    
-    // Hide leaderboard again if it was hidden initially (only relevant if called outside showGameOver)
-    if (wasLeaderboardHidden) {
-        // This logic might need adjustment based on how update is called on resize
-        // For now, let's assume leaderboard should be visible if overlay is visible.
-        // leaderboardElement.style.display = 'none'; 
-    } 
-}
-
-function showGameOver(message, timeMs) {
-    if (!gameOverOverlay || !gameOverMessage || !gameOverTime || !leaderboardElement || !gameOverContent) {
-        console.error("Required overlay elements or leaderboard have not been initialized! Cannot show overlay."); 
-        return;
-    }
-
-    // Set text content first
-    gameOverMessage.textContent = message;
-    if (timeMs) {
-        gameOverTime.textContent = `Your time: ${(timeMs / 1000).toFixed(2)}s`;
-        gameOverTime.style.display = 'block';
-    } else {
-        gameOverTime.style.display = 'none'; 
-    }
-    
-    // Show the overlay 
-    gameOverOverlay.style.display = 'block'; 
-
-    // Call the layout function to position elements
-    updateGameOverLayout(); 
-
-    // Remove the old positioning logic from here
-    /*
-    // --- Dynamic Positioning v3 --- 
-    leaderboardElement.style.display = 'block'; 
-    void gameOverContent.offsetWidth; 
-    void leaderboardElement.offsetWidth;
-    ...
-    leaderboardElement.style.display = 'block'; 
-    */
 }
 
 function endGame(success) {
