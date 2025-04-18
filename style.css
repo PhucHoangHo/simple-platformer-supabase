@@ -10,6 +10,11 @@ body {
 canvas {
     border: 1px solid black;
     background-color: #d0e0f0; /* Light blue background */
+    display: block; /* Prevents potential extra space below */
+    /* Responsive Scaling */
+    max-width: 800px; /* Don't scale larger than original */
+    width: 100%; /* Try to fill container width */
+    height: auto; /* Maintain aspect ratio */
 }
 
 /* Container for Game + Leaderboard */
@@ -30,6 +35,7 @@ canvas {
     min-width: 350px; /* A bit wider */
     border-radius: 8px; /* Rounded corners */
     box-shadow: 3px 3px 8px rgba(0,0,0,0.1); /* Subtle shadow */
+    box-sizing: border-box; /* Ensure consistent box sizing */
 }
 
 #leaderboard h2 {
@@ -68,15 +74,17 @@ canvas {
 /* Game Over Overlay Styles */
 #gameOverOverlay {
     display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
+    position: fixed; 
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
-    z-index: 1000; /* Ensure it's on top */
-    justify-content: center;
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.6); 
+    z-index: 1000; 
+    /* Remove flex centering - will be handled by JS */
+    /* justify-content: center; */
+    /* align-items: center; */
+    /* Let's ensure it's not using flex when shown via JS */
 }
 
 #gameOverContent {
@@ -85,6 +93,10 @@ canvas {
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    position: fixed; /* Use fixed positioning */
+    z-index: 1002; /* Above leaderboard and overlay bg */
+    box-sizing: border-box; /* Ensure consistent box sizing */
+    /* Top/Left will be set by JS */
 }
 
 #gameOverContent h2 {
@@ -110,4 +122,149 @@ canvas {
 
 #replayButton:hover {
     background-color: #45a049;
+}
+
+/* Mobile Controls Styles */
+#mobileControls {
+    display: none; /* Hidden by default */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 10px;
+    background-color: rgba(200, 200, 200, 0.7); /* Semi-transparent grey */
+    box-sizing: border-box; /* Include padding in width */
+    justify-content: space-between; /* Push direction group and jump button apart */
+    align-items: center;
+    z-index: 500; /* Below game over overlay, but above other content */
+    user-select: none; /* Prevent text selection on buttons */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE */
+}
+
+/* Group for direction buttons */
+.direction-controls {
+    display: flex;
+    gap: 15px; /* Space between left and right buttons */
+}
+
+#mobileControls button {
+    font-size: 2em; /* Larger symbols */
+    padding: 15px 25px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    background-color: rgba(240, 240, 240, 0.8);
+    cursor: pointer; /* Indicate interactivity */
+    touch-action: manipulation; /* Optimize touch interaction */
+    min-width: 80px; /* Ensure decent touch area */
+    text-align: center;
+}
+
+/* Style the jump button differently */
+#jumpButton {
+    font-size: 2.5em; /* Slightly larger symbol */
+    background-color: rgba(100, 180, 100, 0.8); /* Greenish background */
+    padding: 20px 30px; /* Larger padding */
+    min-width: 100px; /* Wider jump button */
+}
+
+#jumpButton:active {
+    background-color: rgba(80, 160, 80, 0.9);
+}
+
+#mobileControls button:active {
+    background-color: rgba(220, 220, 220, 0.9);
+}
+
+/* --- Responsive Layout --- */
+/* Apply styles for screens smaller than, say, 850px */
+@media (max-width: 850px) {
+    body {
+        margin: 10px; /* Reduce body margin */
+    }
+    
+    h1 {
+        font-size: 1.8em; /* Slightly smaller main title */
+    }
+
+    .game-container {
+        flex-direction: column; /* Stack game and leaderboard */
+        align-items: center; /* Center items vertically */
+        gap: 20px;
+    }
+
+    #leaderboard {
+        /* min-width: 90%; */ /* Remove min-width */
+        max-width: 90vw; /* Limit width relative to viewport */
+        width: auto; /* Allow shrinking */
+        box-sizing: border-box; /* Include padding in width calc */
+        /* max-width: 400px; */ /* Remove fixed max width */
+        display: none; 
+    }
+
+    #mobileControls {
+        display: flex; /* Show mobile controls */
+    }
+}
+
+/* --- Landscape Mobile Adjustments --- */
+/* Target landscape orientation on devices that are likely mobile (increased height limit) */
+@media (orientation: landscape) and (max-height: 800px) { 
+    h1 {
+        font-size: 1.5em; /* Even smaller title */
+        margin: 5px 0; /* Reduce title margin */
+    }
+    
+    .game-container {
+        flex-direction: column; /* Ensure stacking */
+        align-items: center;
+        gap: 10px; /* Reduce gap */
+    }
+    
+    canvas {
+        max-height: 75vh; /* Limit canvas height (adjust % as needed) */
+        width: auto; /* Maintain aspect ratio based on height */
+        max-width: 100%; /* Prevent overflow if aspect ratio makes it wide */
+    }
+    
+    #leaderboard {
+        display: none; 
+        /* min-width: 80%; */ /* Remove min-width */
+        max-width: 45vw; /* Limit width, allowing space next to modal */
+        width: auto;
+        box-sizing: border-box;
+        padding: 10px 15px; 
+        max-height: 70vh; /* Adjusted max-height slightly */
+        overflow-y: auto; 
+    }
+    
+    #leaderboard h2 {
+        font-size: 1.8em; /* Smaller leaderboard title */
+        margin-bottom: 10px;
+    }
+
+    #mobileControls {
+        display: flex; /* Ensure controls are shown */
+        padding: 5px 10px; /* Reduce padding */
+    }
+
+    #mobileControls button {
+        font-size: 1.5em; /* Slightly smaller buttons */
+        padding: 10px 15px;
+        min-width: 60px;
+    }
+
+    #jumpButton {
+        font-size: 2em;
+        padding: 12px 20px;
+        min-width: 80px;
+    }
+    
+    /* Ensure game over overlay still works */
+    #gameOverContent {
+        padding: 15px 25px; 
+        max-width: 45vw; 
+        /* box-sizing: border-box; */ /* Already set globally */
+    }
 } 

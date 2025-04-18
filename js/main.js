@@ -8,6 +8,7 @@ const ctx = canvas.getContext('2d');
 // --- Input Handling ---
 const keysPressed = {}; // Keep track of currently pressed keys
 
+// -- Keyboard Listeners --
 document.addEventListener('keydown', (event) => {
     keysPressed[event.code] = true;
 });
@@ -15,6 +16,46 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     keysPressed[event.code] = false;
 });
+
+// -- Touch Button Listeners (will be added in init) --
+function setupTouchControls() {
+    const leftButton = document.getElementById('leftButton');
+    const rightButton = document.getElementById('rightButton');
+    const jumpButton = document.getElementById('jumpButton');
+
+    if (!leftButton || !rightButton || !jumpButton) {
+        // Don't fail if buttons aren't present (e.g., desktop view)
+        console.log("Mobile control buttons not found, skipping touch setup.");
+        return;
+    }
+
+    const handleTouchStart = (event, key) => {
+        event.preventDefault(); // Prevent default touch behavior (scrolling, zoom)
+        keysPressed[key] = true;
+    };
+
+    const handleTouchEnd = (event, key) => {
+        event.preventDefault(); 
+        keysPressed[key] = false;
+    };
+
+    // Left Button
+    leftButton.addEventListener('touchstart', (e) => handleTouchStart(e, 'ArrowLeft'), { passive: false });
+    leftButton.addEventListener('touchend', (e) => handleTouchEnd(e, 'ArrowLeft'), { passive: false });
+    leftButton.addEventListener('touchcancel', (e) => handleTouchEnd(e, 'ArrowLeft'), { passive: false }); // Handle cancellation
+
+    // Right Button
+    rightButton.addEventListener('touchstart', (e) => handleTouchStart(e, 'ArrowRight'), { passive: false });
+    rightButton.addEventListener('touchend', (e) => handleTouchEnd(e, 'ArrowRight'), { passive: false });
+    rightButton.addEventListener('touchcancel', (e) => handleTouchEnd(e, 'ArrowRight'), { passive: false });
+
+    // Jump Button
+    jumpButton.addEventListener('touchstart', (e) => handleTouchStart(e, 'Space'), { passive: false });
+    jumpButton.addEventListener('touchend', (e) => handleTouchEnd(e, 'Space'), { passive: false });
+    jumpButton.addEventListener('touchcancel', (e) => handleTouchEnd(e, 'Space'), { passive: false });
+    
+    console.log("Touch controls setup complete.");
+}
 
 function handleInput() {
     // Horizontal Movement
@@ -174,19 +215,45 @@ function init() {
     console.log("Initializing game...");
     
     // Get references to overlay elements *after* DOM is loaded
-    gameOverOverlay = document.getElementById('gameOverOverlay'); // Assign to global
-    gameOverMessage = document.getElementById('gameOverMessage'); // Assign to global
-    gameOverTime = document.getElementById('gameOverTime');       // Assign to global
+    gameOverOverlay = document.getElementById('gameOverOverlay'); 
+    gameOverMessage = document.getElementById('gameOverMessage'); 
+    gameOverTime = document.getElementById('gameOverTime');       
+    leaderboardElement = document.getElementById('leaderboard'); 
+    gameOverContent = document.getElementById('gameOverContent'); // Assign to global
     const replayButton = document.getElementById('replayButton');
-    
-    if (replayButton && gameOverOverlay) { // Check the global variable now
+    const mobileControls = document.getElementById('mobileControls'); // Get mobile controls too
+        
+    if (replayButton && gameOverOverlay && leaderboardElement) { // Check leaderboardElement too
         replayButton.addEventListener('click', () => {
             gameOverOverlay.style.display = 'none'; // Hide the overlay
+            
+            // Reset dynamic styles for leaderboard and modal
+            leaderboardElement.style.position = '';
+            leaderboardElement.style.zIndex = '';
+            leaderboardElement.style.top = '';
+            leaderboardElement.style.left = '';
+            gameOverContent.style.position = ''; // Reset modal position
+            gameOverContent.style.zIndex = '';
+            gameOverContent.style.top = ''; // Reset modal top
+            gameOverContent.style.left = ''; // Reset modal left
+
+            // Check if we are in mobile view (by checking if mobile controls are displayed)
+            // This uses the CSS computed style, so it reflects the media query results
+            if (mobileControls && window.getComputedStyle(mobileControls).display !== 'none') { 
+                 leaderboardElement.style.display = 'none'; // Hide leaderboard again on mobile restart
+            } else {
+                // Ensure leaderboard is visible on desktop after replay
+                leaderboardElement.style.display = 'block'; 
+            }
+            
             startGame(); // Restart the game
         });
     } else {
-        console.error("Replay button or Game Over overlay not found!");
+        console.error("Required elements (Replay button, Game Over overlay, or Leaderboard) not found!");
     }
+
+    // Setup touch controls
+    setupTouchControls();
 
     // Start the actual game
     startGame();

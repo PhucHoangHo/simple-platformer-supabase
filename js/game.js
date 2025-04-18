@@ -46,10 +46,12 @@ function startGame() {
 let gameOverOverlay = null;
 let gameOverMessage = null;
 let gameOverTime = null;
+let leaderboardElement = null; // Added variable for leaderboard
+let gameOverContent = null; // Added gameOverContent variable
 
 function showGameOver(message, timeMs) {
-    if (!gameOverOverlay || !gameOverMessage || !gameOverTime) {
-        console.error("Overlay elements have not been initialized! Cannot show overlay.");
+    if (!gameOverOverlay || !gameOverMessage || !gameOverTime || !leaderboardElement || !gameOverContent) {
+        console.error("Required overlay elements or leaderboard have not been initialized! Cannot show overlay.");
         return;
     }
     
@@ -61,7 +63,86 @@ function showGameOver(message, timeMs) {
         gameOverTime.style.display = 'none'; // Hide time if not applicable
     }
     
-    gameOverOverlay.style.display = 'flex'; // Show the overlay (use flex to center content)
+    gameOverOverlay.style.display = 'block'; // Set display to block instead of flex
+
+    // --- Dynamic Positioning v3 --- 
+    leaderboardElement.style.display = 'block'; 
+    void gameOverContent.offsetWidth; 
+    void leaderboardElement.offsetWidth;
+    
+    const modalRect = gameOverContent.getBoundingClientRect();
+    const leaderboardRect = leaderboardElement.getBoundingClientRect(); 
+    const horizontalMargin = 15; // Use distinct names for clarity
+    const verticalMargin = 30; // Increased vertical space
+    const padding = 10; // Space from screen edges
+
+    let modalTop, modalLeft, leaderTop, leaderLeft;
+    const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+    const totalWidthSideBySide = modalRect.width + horizontalMargin + leaderboardRect.width; // Corrected var name
+    const fitsHorizontally = totalWidthSideBySide < (window.innerWidth - 2 * padding);
+
+    // Decide layout: Prefer side-by-side in landscape if width allows
+    if (isLandscape && fitsHorizontally) {
+        // Landscape & Fits Width: Place side-by-side, centered horizontally as a group
+        modalLeft = (window.innerWidth - totalWidthSideBySide) / 2;
+        leaderLeft = modalLeft + modalRect.width + horizontalMargin;
+        const maxHeight = Math.max(modalRect.height, leaderboardRect.height);
+        modalTop = (window.innerHeight - maxHeight) / 2; 
+        leaderTop = modalTop; 
+
+    } else {
+        // Portrait OR Landscape but too wide: Stack vertically, centered horizontally
+        
+        // Position Modal first
+        modalLeft = (window.innerWidth - modalRect.width) / 2;
+        modalTop = padding * 2; 
+        // Clamp modal position
+        modalTop = Math.max(padding, modalTop);
+        modalLeft = Math.max(padding, modalLeft);
+        // Apply modal styles *first*
+        gameOverContent.style.position = 'fixed'; 
+        gameOverContent.style.zIndex = '1002'; 
+        gameOverContent.style.top = `${modalTop}px`;
+        gameOverContent.style.left = `${modalLeft}px`;
+
+        // Force reflow after positioning modal
+        void gameOverContent.offsetHeight;
+        
+        // Now calculate leaderboard position based on modal's actual place
+        const updatedModalRect = gameOverContent.getBoundingClientRect(); // Re-measure!
+        leaderLeft = (window.innerWidth - leaderboardRect.width) / 2;
+        leaderTop = updatedModalRect.bottom + verticalMargin; // Position below measured bottom
+        
+        // Clamp leaderboard position
+        leaderLeft = Math.max(padding, leaderLeft);
+        leaderTop = Math.max(padding, leaderTop);
+        if (leaderTop + leaderboardRect.height > window.innerHeight - padding) {
+            leaderTop = window.innerHeight - leaderboardRect.height - padding;
+        }
+        if (leaderLeft + leaderboardRect.width > window.innerWidth - padding) {
+            leaderLeft = window.innerWidth - leaderboardRect.width - padding;
+        }
+        
+        console.log(`[DEBUG Portrait] modalBottom: ${updatedModalRect.bottom}, verticalMargin: ${verticalMargin}, calculated leaderTop: ${updatedModalRect.bottom + verticalMargin}, final leaderTop: ${leaderTop}`); // DEBUG Log
+    }
+
+    // Apply styles to position modal (if not already done in portrait block)
+    if (!(isLandscape && fitsHorizontally)) {
+        // Already applied in the portrait 'else' block
+    } else {
+        // Apply modal styles for landscape case
+        gameOverContent.style.position = 'fixed'; 
+        gameOverContent.style.zIndex = '1002'; 
+        gameOverContent.style.top = `${modalTop}px`;
+        gameOverContent.style.left = `${modalLeft}px`;
+    }
+    
+    // Apply styles to position leaderboard
+    leaderboardElement.style.position = 'fixed'; 
+    leaderboardElement.style.zIndex = '1001'; 
+    leaderboardElement.style.top = `${leaderTop}px`;
+    leaderboardElement.style.left = `${leaderLeft}px`;
+    leaderboardElement.style.display = 'block'; 
 }
 
 function endGame(success) {
