@@ -1,5 +1,5 @@
 body {
-    font-family: sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Nicer font */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -12,17 +12,37 @@ canvas {
     background-color: #d0e0f0; /* Light blue background */
 }
 
-#leaderboard {
+/* Container for Game + Leaderboard */
+.game-container {
+    display: flex;
+    flex-direction: row; /* Arrange items horizontally */
+    align-items: flex-start; /* Align items to the top */
+    gap: 30px; /* Space between canvas and leaderboard */
     margin-top: 20px;
-    padding: 15px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    min-width: 300px;
+}
+
+#leaderboard {
+    /* Remove margin-top as gap is handled by container */
+    /* margin-top: 20px; */ 
+    padding: 20px 25px; /* Slightly more padding */
+    border: 1px solid #b0b0b0; /* Slightly darker border */
+    background-color: #f8f8f8; /* Light grey background */
+    min-width: 350px; /* A bit wider */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.1); /* Subtle shadow */
 }
 
 #leaderboard h2 {
     margin-top: 0;
+    margin-bottom: 20px; /* More space below title */
     text-align: center;
+    font-family: 'Impact', Haettenschweiler, 'Arial Narrow Bold', sans-serif; /* Bold, impactful font */
+    font-size: 2em; /* Larger font size */
+    color: #2a52be; /* Regal blue */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2); /* Simple text shadow */
+    /* Optional: Add a subtle gradient background or border */
+    /* border-bottom: 2px solid #2a52be; */
+    /* padding-bottom: 5px; */
 }
 
 #leaderboard ul {
