@@ -260,6 +260,18 @@ function init() {
     
     // Start the game loop
     requestAnimationFrame(gameLoop);
+
+    // Add resize listener to readjust layout if game over screen is visible
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            // Check if the updateGameOverLayout function exists (it's in game.js)
+            if (typeof updateGameOverLayout === 'function') {
+                updateGameOverLayout(); // Call the layout function after resize settles
+            }
+        }, 250); // Debounce timeout in milliseconds (adjust as needed)
+    });
 }
 
 // Start the game when the DOM is fully loaded
