@@ -10,10 +10,27 @@ async function displayLeaderboard() {
 
     leaderboardList.innerHTML = '<li>Loading...</li>'; // Show loading state
 
-    const scores = await fetchLeaderboard(5); // Fetch top 5 scores
+    const limit = 20; // --- Increased limit --- 
+    const scores = await fetchLeaderboard(limit); // Fetch top 20 scores
 
     leaderboardList.innerHTML = ''; // Clear loading/previous scores
 
+    for (let i = 0; i < limit; i++) {
+        const li = document.createElement('li');
+        if (scores && i < scores.length) {
+            // Score exists for this rank
+            const score = scores[i];
+            const timeInSeconds = (score.time_ms / 1000).toFixed(2);
+            li.textContent = `#${i + 1}: ${score.player_name} - ${timeInSeconds}s`;
+        } else {
+            // No score for this rank, display placeholder
+            li.innerHTML = `#${i + 1}: <span style="color: #999; font-style: italic;">Not Yet Claimed 🏆</span>`; // Added placeholder text and styling
+        }
+        leaderboardList.appendChild(li);
+    }
+
+    // Remove the old logic that handled empty scores differently
+    /*
     if (scores && scores.length > 0) {
         scores.forEach((score, index) => {
             const li = document.createElement('li');
@@ -27,6 +44,7 @@ async function displayLeaderboard() {
     } else {
          leaderboardList.innerHTML = '<li>Leaderboard disabled.</li>'; // Message if Supabase isn't configured
     }
+    */
 }
 
 // Add event listener to the refresh button
