@@ -195,12 +195,12 @@ canvas {
     }
 
     #leaderboard {
-        /* min-width: 90%; */ /* Remove min-width */
-        max-width: 90vw; /* Limit width relative to viewport */
-        width: auto; /* Allow shrinking */
-        box-sizing: border-box; /* Include padding in width calc */
-        /* max-width: 400px; */ /* Remove fixed max width */
+        max-width: 90vw; 
+        width: auto; 
+        box-sizing: border-box; 
         display: none; 
+        max-height: 50vh; /* Limit height in portrait */
+        overflow-y: auto; /* Enable vertical scroll */
     }
 
     #mobileControls {
